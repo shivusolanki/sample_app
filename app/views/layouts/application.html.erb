@@ -15,7 +15,7 @@
     <![endif]-->
   </head>
   <body>
-    <%= render 'layouts/header' %>
+    
     <header class="navbar navbar-fixed-top navbar-inverse">
       <div class="container">
         <%= link_to "sample app", '/', id: "logo" %>
@@ -23,14 +23,16 @@
           <ul class="nav navbar-nav navbar-right">
             <li><%= link_to "Home",   root_path %></li>
             <li><%= link_to "Help",   '/help' %></li>
-            <li><%= link_to "About",  '/about' %></li>
-            <li><%= link_to "Contact",'/contact' %></li>
-            <li><%= link_to "Log in", '/signup' %></li>
+            <li><%= link_to "Log in", '/login' %></li>
           </ul>
         </nav>
       </div>
     </header>
+    <%= render 'layouts/header' %>
     <div class="container">
+      <%= flash.each do |message_type, message| %>
+     <%= content_tag(:div, message, class: "alert alert-#{message_type}") %>
+      <%end%>
       <%= yield %>
          <%= render 'layouts/footer' %>
          <%= debug(params) if Rails.env.development? %>

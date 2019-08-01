@@ -19,7 +19,7 @@ textarea {
 }
 
 .center h1 {
-  margin-bottom: : 15px;
+  margin-bottom: 15px;
 }
 aside {
   section.user_info {
@@ -47,6 +47,20 @@ aside {
   }
 }
 
+@mixin box_sizing {
+  -moz-box-sizing:    border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing:         border-box;
+}
+
+.debug_dump {
+  clear: both;
+  float: left;
+  width: 100%;
+  margin-top: 45px;
+  @include box_sizing;
+  }
+
 .gravatar {
   float: left;
   margin-right: 10px;
@@ -55,6 +69,7 @@ aside {
 .gravatar_edit {
   margin-top: 15px;
 }
+
 input, textarea, select, .uneditable-input {
   border: 1px solid #bbb;
   width: 100%;
