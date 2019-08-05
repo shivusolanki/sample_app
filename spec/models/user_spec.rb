@@ -1,5 +1,4 @@
 require 'rails_helper'
-require "./app/models/user.rb"
 
 describe User do
 	before(:each) do
