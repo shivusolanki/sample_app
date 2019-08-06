@@ -5,4 +5,6 @@ describe SessionsController do
   	get '/'	
   	expect(response.status).to eql 200
   end
+
+  
 end
