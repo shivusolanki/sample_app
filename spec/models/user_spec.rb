@@ -1,9 +1,23 @@
-require 'rails_helper'
+require '../rails_helper'
 
 describe User do
 	before(:each) do
-		@user = User.new(name: "Example User", email: "example485@railstutorial.org", password: "123456", password_confirmation: "123456")
+		@user = User.new(name: "Example User", email: "example485@railstutorial.org",
+		                 password: "123456", password_confirmation: "123456")
 	end
+
+  let(:other_user) { User.new(name: "Example User", email: "example455@railstutorial.org",
+                     password: "123456", password_confirmation: "123456")
+                    }
+  subject{ @user }
+
+  it { should respond_to(:admin) }
+  it { should respond_to(:microposts) }
+  it { should respond_to(:feed) }
+  it { should respond_to(:active_relationships) }
+  it { should respond_to(:passive_relationships) }
+  it { should respond_to(:followers) }
+  it { should respond_to(:following) }
 
 	it "should be valid" do
 		expect(@user.valid?).to be true
@@ -42,7 +56,7 @@ describe User do
                            foo@bar_baz.com foo@bar+baz.com]
 		addresses.each do |address|
 			@user.email = address
-		expect(@user.valid?).to be true
+		  expect(@user.valid?).to be false
 		end
 	end
   
@@ -70,5 +84,113 @@ describe User do
   	expect(@user.valid?).to be false
   end
 
+  it "has one buyer" do
+    assc = User.reflect_on_association(:microposts)
+    expect(assc.macro).to eq :has_many
+  end
 
+  it "when password doesn't match with password_confirmation" do
+  	@user.password = "123456"
+  	@user.password_confirmation = "654321"
+  	expect(@user.valid?). to be false
+  end
+
+  context "return value of authenticate method" do
+  	before { @user.save}
+  	let(:found_user) { User.find_by(email: @user.email)}
+
+  	it "with valid password" do
+  		# skip
+  		expect(found_user.authenticate(@user.password)).to eql (@user)
+  	end
+
+    context "with invalid password" do
+  		let(:user_for_invalid_password) { found_user.authenticate("invalid")}
+
+  		it { expect(user_for_invalid_password).to be false}
+  	end
+  end
+
+  context "remember token" do
+    before { @user.remember }
+    it{ expect(@user.remember_token).not_to be_blank }
+  end
+
+  it "should forgot" do
+    @user.forget
+    expect(@user.remember_digest).to be_nil
+  end
+
+  it "should follow" do
+    other_user.save
+    @user.follow(other_user)
+    expect(@user.following).to include(other_user)
+  end
+
+
+  it "should unfollow" do
+   other_user.save
+    @user.unfollow(other_user)
+    expect(@user.following).not_to include(other_user)
+  end
+
+  it "is following?" do
+    other_user.save
+    expect(@user.following?(other_user)).to be false
+    @user.follow(other_user)
+    expect(@user.following?(other_user)).to be true
+  end
+   
+  it "should create reset digest" do
+   @user.save
+   expect(@user.reset_digest).to be_nil
+   @user.create_reset_digest
+   expect(@user.reset_digest).not_to be_nil
+  end
+
+  it "sends an email" do
+    @user.save
+    expect { @user.send_activation_email }.to change { ActionMailer::Base.deliveries.count }.by(1)
+  end 
+
+  # it "should send password reset email" do
+  #   expect { @user.send_password_reset_email }.to change { ActionMailer::Base.deliveries.count }.by(1)
+  # end 
+
+  it "test password_reset_expired?" do
+    @user.save
+    @user.reset_sent_at = Time.zone.now - 1.hour
+    expect(@user.password_reset_expired?).to be false
+    @user.reset_sent_at = Time.zone.now - 3.hour
+    expect(@user.password_reset_expired?).to be true
+  end
+    
+  it "should activate" do
+    @user.save
+    @user.activate
+    expect(@user.activated).to be true
+  end
+
+  describe "micropost associations" do
+    before (:each) do 
+      @user.save
+      old_micropost = Micropost.new(content: "Lorem ipsum", user_id: @user.id, created_at: 1.day.ago) 
+      new_micropost = Micropost.new(content: "Lorem ipsum", user_id: @user.id, created_at: 1.hour.ago)
+      old_micropost.save
+      new_micropost.save
+    end
+
+    # it "should have the right microposts in the right order" do
+    # expect(@user.microposts.to_a).to eq [new_micropost, old_micropost]
+    # end
+
+    it "should destroy associated microposts" do
+      microposts = @user.microposts.to_a
+      @user.destroy
+      expect(microposts).not_to be_empty
+      microposts.each do |micropost|
+        expect(Micropost.where(id: micropost.id)).to be_empty
+     end
+    end
+  end 
 end
