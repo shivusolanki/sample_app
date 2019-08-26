@@ -10,7 +10,9 @@ describe User do
                      password: "123456", password_confirmation: "123456")
                     }
   subject{ @user }
-
+  it { should respond_to(:remember_token) }
+  it { should respond_to(:authenticate) }
+  it { should respond_to(:password_confirmation) }
   it { should respond_to(:admin) }
   it { should respond_to(:microposts) }
   it { should respond_to(:feed) }
@@ -172,17 +174,17 @@ describe User do
   end
 
   describe "micropost associations" do
-    before (:each) do 
-      @user.save
-      old_micropost = Micropost.new(content: "Lorem ipsum", user_id: @user.id, created_at: 1.day.ago) 
-      new_micropost = Micropost.new(content: "Lorem ipsum", user_id: @user.id, created_at: 1.hour.ago)
-      old_micropost.save
-      new_micropost.save
+    before { @user.save }
+    let!(:older_micropost) do
+      FactoryBot.create(:micropost, user: @user, created_at: 1.day.ago)
+    end
+    let!(:new_micropost) do
+      FactoryBot.create(:micropost, user: @user, created_at: 1.hour.ago)
     end
 
-    # it "should have the right microposts in the right order" do
-    # expect(@user.microposts.to_a).to eq [new_micropost, old_micropost]
-    # end
+    it "should have the right microposts in the right order" do
+    expect(@user.microposts.to_a).to eq [new_micropost, older_micropost]
+    end
 
     it "should destroy associated microposts" do
       microposts = @user.microposts.to_a
@@ -190,7 +192,25 @@ describe User do
       expect(microposts).not_to be_empty
       microposts.each do |micropost|
         expect(Micropost.where(id: micropost.id)).to be_empty
-     end
+    end
+  end
+
+    describe "status" do
+      let(:unfollowed_post) do 
+        FactoryBot.create(:micropost, user: FactoryBot.create(:user)) 
+      end
+
+      it "should include new_micropost" do
+        expect(@user.feed).to include(new_micropost)
+      end
+
+      it "should include new_micropost" do
+        expect(@user.feed).to include(older_micropost)
+      end
+
+      it "should include new_micropost" do
+        expect(@user.feed).not_to include(unfollowed_post)
+      end
     end
   end 
 end

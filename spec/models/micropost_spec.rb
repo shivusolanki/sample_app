@@ -1,17 +1,17 @@
 require '../rails_helper'
 
 describe Micropost do
-	let(:user) {User.new(name: "Example User", email: "example485@railstutorial.org",
-		                 password: "123456", password_confirmation: "123456") }
-	before do
-		user.save
-		@micropost = Micropost.new(content: "Lorem ipsum", user_id: user.id)
-  end
+	let(:user) { FactoryBot.create(:user) }
+
+	before { @micropost = user.microposts.build(content: "Lorem ipsum") }
 
   subject {@micropost}
 
-  it { should respond_to(:content)}
-  it { should respond_to(:user_id)}
+  it { should respond_to(:content) }
+  it { should respond_to(:user_id) }
+  it { should respond_to(:user) }
+  # it(:user) { should eq user }
+
   it { should be_valid }
 
   context "when user_is is not present" do
@@ -28,4 +28,6 @@ describe Micropost do
   	before { @micropost.content = "a" * 141 }
   	it { should_not be_valid }
   end
+
+ 
 end
